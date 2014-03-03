@@ -13,9 +13,11 @@ function Board(compPlayer = 1)
 							[null, null, null],
 							[null, null, null]
 							];
+
+    var active = true; //active tells us whether the game is playable.  set to false to disable the board when the game ends.
     var moveNum = 0; //Keeps track of the move number
     var players = ['X', 'O'];
-    var computerPlayer = compPlayer; // index n umber of the computerPlayer
+    var computerPlayer = compPlayer; // index number of the computerPlayer.  either 0 or 1
 };
 
 // returns index of current player
@@ -57,49 +59,60 @@ Board.prototype.evaluate = function(playerNum)
     return 0; // neutral position, no win yet.
 };
 
-
+//Locks the board and displays the provided game over message.
+Board.prototype.gameOver = function(msg)
+{
+    this.active = false;
+    console.log(msg); //TODO: make this update stuff on the DOM rather than just the console.
+}
 
 
 Board.prototype.placePiece = function(x, y)
 {
-    //ensure there's not a piece there already
-    if (this.board[x][y] != null)
+    //it's legal to click a spot if the game is ongoing (this.active) and no one has played there yet.
+    if (this.active && this.board[x][y] != null)
     {
+        this.active = false; // disable clicking of the board while we're doing our stuff.  this is our lock to prevent user-confusing race conditions.
         var currentSymbol = this.currentSymbol();
         var currentPlayer = this.currentPlayer();
 
         this.board[x][y] == currentSymbol;
 
-
-        var game_over_str = '';
-
-        //TODO: continya w/ writing out this truth table.
-
-        this.evaluate() | computer Player is current Player | result
-        1                 1
-
-        if (this.evaluate() == ) // the mover won
+        var game_result = this.evaluate()
+        if (game_result == 0 && board_is_full)
         {
-            if (currentPlayer == this.computerPlayer)
+            //draw, because
+            gameOver("The game was a draw. Click New Game to start again");
+
+            return;
+
+        }
+        else if (game_result != 0) //somebody won
+        {
+            //TODO: i'd like to make it show how the win occurred through highlights
+            if ((this.evaluate() == 1) ^ (currentPlayer == this.computerPlayer)) // bitwise xor lets us simplify the logic :)
             {
-                game_over_str = "Sorry, You lost!";
+                //TODO: write to them that they've won.
+                return;
             }
             else
             {
-                game_over_str = "Yay, You won!";
+                //you lose
+                return;
             }
-            //TODO: would like to highlight the actual winning moves
 
         }
 
+        //we update moveNum if the game isn't over.
         this.moveNum++;
-        //TODO: update the mover piece stuff.
-        //test whether the game has been won or lost, or drawn, and run the appopriate stuff depending
 
+        //If it's the computer's turn, we want to have them move
+        if (this.currentPlayer == this.computerPlayer)
+        {
+            this.computerMove();
 
-
-        //make computerMove if it's computer's turn.
-
+        }
+        this.active = true; // the user can either move immediately, or after the computer has moved.  this is our lock to prevent race conditions.
     }
 
 
